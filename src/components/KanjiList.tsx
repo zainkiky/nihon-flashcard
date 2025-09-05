@@ -1,5 +1,5 @@
 import { Flashcard } from '@/types/flashcard';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 
 interface KanjiListProps {
@@ -7,8 +7,21 @@ interface KanjiListProps {
 }
 
 const KanjiList = ({ flashcards }: KanjiListProps) => {
-  const [showHiragana, setShowHiragana] = useState(true);
-  const [showBahasa, setShowBahasa] = useState(true);
+  const [hiraganaVisibility, setHiraganaVisibility] = useState<boolean[]>(() =>
+    flashcards.map(() => true)
+  );
+  const [bahasaVisibility, setBahasaVisibility] = useState<boolean[]>(() =>
+    flashcards.map(() => true)
+  );
+
+  const areAllHiraganaVisible = useMemo(
+    () => hiraganaVisibility.every(Boolean),
+    [hiraganaVisibility]
+  );
+  const areAllBahasaVisible = useMemo(
+    () => bahasaVisibility.every(Boolean),
+    [bahasaVisibility]
+  );
 
   return (
     <div className="mt-8 bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
@@ -17,18 +30,24 @@ const KanjiList = ({ flashcards }: KanjiListProps) => {
           Complete Kanji List
         </h3>
 
-        {/* Visibility Toggles */}
+        {/* Master Visibility Toggles (apply to all items) */}
         <div className="flex gap-2">
           <button
-            onClick={() => setShowHiragana(!showHiragana)}
+            onClick={() =>
+              setHiraganaVisibility((prev) =>
+                prev.map(() => !areAllHiraganaVisible)
+              )
+            }
             className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-              showHiragana
+              areAllHiraganaVisible
                 ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300'
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
             }`}
-            aria-label={`${showHiragana ? 'Hide' : 'Show'} Hiragana`}
+            aria-label={`${
+              areAllHiraganaVisible ? 'Hide' : 'Show'
+            } Hiragana (all)`}
           >
-            {showHiragana ? (
+            {areAllHiraganaVisible ? (
               <Eye className="w-4 h-4" />
             ) : (
               <EyeOff className="w-4 h-4" />
@@ -37,15 +56,21 @@ const KanjiList = ({ flashcards }: KanjiListProps) => {
           </button>
 
           <button
-            onClick={() => setShowBahasa(!showBahasa)}
+            onClick={() =>
+              setBahasaVisibility((prev) =>
+                prev.map(() => !areAllBahasaVisible)
+              )
+            }
             className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-              showBahasa
+              areAllBahasaVisible
                 ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300'
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
             }`}
-            aria-label={`${showBahasa ? 'Hide' : 'Show'} Bahasa Indonesia`}
+            aria-label={`${
+              areAllBahasaVisible ? 'Hide' : 'Show'
+            } Bahasa Indonesia (all)`}
           >
-            {showBahasa ? (
+            {areAllBahasaVisible ? (
               <Eye className="w-4 h-4" />
             ) : (
               <EyeOff className="w-4 h-4" />
@@ -65,16 +90,65 @@ const KanjiList = ({ flashcards }: KanjiListProps) => {
             <div className="text-2xl font-bold text-gray-800 dark:text-white mb-2 text-center">
               {card.kanji}
             </div>
-            {showHiragana && (
+            {hiraganaVisibility[index] && (
               <div className="text-sm text-gray-600 dark:text-gray-300 mb-1 text-center">
                 {card.hiragana}
               </div>
             )}
-            {showBahasa && (
+            {bahasaVisibility[index] && (
               <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
                 {card.bahasa}
               </div>
             )}
+
+            {/* Per-item visibility toggles */}
+            <div className="mt-3 flex justify-center gap-2">
+              <button
+                onClick={() =>
+                  setHiraganaVisibility((prev) =>
+                    prev.map((v, i) => (i === index ? !v : v))
+                  )
+                }
+                className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                  hiraganaVisibility[index]
+                    ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                }`}
+                aria-label={`${
+                  hiraganaVisibility[index] ? 'Hide' : 'Show'
+                } Hiragana for ${card.kanji}`}
+              >
+                {hiraganaVisibility[index] ? (
+                  <Eye className="w-3 h-3" />
+                ) : (
+                  <EyeOff className="w-3 h-3" />
+                )}
+                Hiragana
+              </button>
+
+              <button
+                onClick={() =>
+                  setBahasaVisibility((prev) =>
+                    prev.map((v, i) => (i === index ? !v : v))
+                  )
+                }
+                className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                  bahasaVisibility[index]
+                    ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                }`}
+                aria-label={`${
+                  bahasaVisibility[index] ? 'Hide' : 'Show'
+                } Bahasa for ${card.kanji}`}
+              >
+                {bahasaVisibility[index] ? (
+                  <Eye className="w-3 h-3" />
+                ) : (
+                  <EyeOff className="w-3 h-3" />
+                )}
+                Bahasa
+              </button>
+            </div>
           </div>
         ))}
       </div>
@@ -90,16 +164,15 @@ const KanjiList = ({ flashcards }: KanjiListProps) => {
               <th className="text-left py-3 px-4 font-semibold text-gray-800 dark:text-white">
                 Kanji
               </th>
-              {showHiragana && (
-                <th className="text-left py-3 px-4 font-semibold text-gray-800 dark:text-white">
-                  Hiragana
-                </th>
-              )}
-              {showBahasa && (
-                <th className="text-left py-3 px-4 font-semibold text-gray-800 dark:text-white">
-                  Bahasa Indonesia
-                </th>
-              )}
+              <th className="text-left py-3 px-4 font-semibold text-gray-800 dark:text-white">
+                Hiragana
+              </th>
+              <th className="text-left py-3 px-4 font-semibold text-gray-800 dark:text-white">
+                Bahasa Indonesia
+              </th>
+              <th className="text-left py-3 px-4 font-semibold text-gray-800 dark:text-white">
+                Visibility
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -116,16 +189,60 @@ const KanjiList = ({ flashcards }: KanjiListProps) => {
                     {card.kanji}
                   </span>
                 </td>
-                {showHiragana && (
-                  <td className="py-3 px-4 text-gray-600 dark:text-gray-300">
-                    {card.hiragana}
-                  </td>
-                )}
-                {showBahasa && (
-                  <td className="py-3 px-4 text-gray-600 dark:text-gray-300">
-                    {card.bahasa}
-                  </td>
-                )}
+                <td className="py-3 px-4 text-gray-600 dark:text-gray-300">
+                  {hiraganaVisibility[index] ? card.hiragana : ''}
+                </td>
+                <td className="py-3 px-4 text-gray-600 dark:text-gray-300">
+                  {bahasaVisibility[index] ? card.bahasa : ''}
+                </td>
+                <td className="py-3 px-4">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() =>
+                        setHiraganaVisibility((prev) =>
+                          prev.map((v, i) => (i === index ? !v : v))
+                        )
+                      }
+                      className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                        hiraganaVisibility[index]
+                          ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                      }`}
+                      aria-label={`${
+                        hiraganaVisibility[index] ? 'Hide' : 'Show'
+                      } Hiragana for ${card.kanji}`}
+                    >
+                      {hiraganaVisibility[index] ? (
+                        <Eye className="w-3 h-3" />
+                      ) : (
+                        <EyeOff className="w-3 h-3" />
+                      )}
+                      Hiragana
+                    </button>
+                    <button
+                      onClick={() =>
+                        setBahasaVisibility((prev) =>
+                          prev.map((v, i) => (i === index ? !v : v))
+                        )
+                      }
+                      className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                        bahasaVisibility[index]
+                          ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                      }`}
+                      aria-label={`${
+                        bahasaVisibility[index] ? 'Hide' : 'Show'
+                      } Bahasa for ${card.kanji}`}
+                    >
+                      {bahasaVisibility[index] ? (
+                        <Eye className="w-3 h-3" />
+                      ) : (
+                        <EyeOff className="w-3 h-3" />
+                      )}
+                      Bahasa
+                    </button>
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>
